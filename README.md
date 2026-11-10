@@ -157,6 +157,38 @@ open -a Deskflow
 
 ---
 
+## 3.5 已连上但鼠标在 Mac 上不流畅（卡顿 / 一顿一顿）
+
+**主机端已排查（2026-11-10）**：Windows → Mac（192.168.110.193）ping 稳定 2–5 ms，0 丢包；屏幕切换日志正常。所以网络不是主因，按下面顺序处理 Mac 端：
+
+1. **关闭 Deskflow 的 App Nap（最常见原因）**。Deskflow 窗口不在前台时，macOS 会给它节流，鼠标就会一顿一顿：
+
+   ```bash
+   BID="$(osascript -e 'id of app "Deskflow"')"; echo "$BID"
+   defaults write "$BID" NSAppSleepDisabled -bool YES
+   pkill -x Deskflow; pkill -f deskflow-core; sleep 1; open -a Deskflow
+   ```
+
+   验证：`defaults read "$BID" NSAppSleepDisabled` 输出 `1`。
+
+2. **日志级别不要用 DEBUG**。DEBUG 会把每次鼠标移动都写进日志，非常拖慢速度。确认 `~/Library/Deskflow/Deskflow.conf` 里没有 `level=DEBUG`（用 `level=INFO` 或直接删掉这一行），改完后重启 Deskflow。
+
+3. **反向测一下网络抖动**（Mac 的 Wi‑Fi 省电偶尔会造成卡顿尖峰）：
+
+   ```bash
+   ping -c 60 -i 0.2 192.168.110.174 | tail -3
+   ```
+
+   如果 max 远大于 avg（比如超过 50 ms），让 Mac 连 5 GHz Wi‑Fi 或改用有线网。
+
+4. **屏幕缩放**：Mac 外接 21:9 显示器时，如果在「显示器」设置里选了非默认的缩放分辨率，指针移动的计算量会变大。可以试试切回“默认”分辨率，对比一下流畅度。
+
+5. **鼠标回报率（在 Windows 那边处理，需要用户操作）**：如果鼠标是 4000/8000 Hz 的高回报率游戏鼠标，Deskflow 每秒要转发几千个移动事件，Mac 端会跟不上。请用户在鼠标驱动（如 Logi Options+ / G HUB）里把回报率降到 **1000 Hz 或 500 Hz** 再试。
+
+每处理一项，都请用户实际移动鼠标对比一下，记录是哪一项起了作用。
+
+---
+
 ## 4. 排错
 
 | 现象 | 处理 |
@@ -165,7 +197,7 @@ open -a Deskflow
 | `unknown client name` / 连上后立刻断开 | Mac 的计算机名不是 `MACBOOK`，或主机布局里还没加 Mac（第 2.6 节） |
 | TLS / SSL 握手错误 | 两边 TLS 开关不一致，或版本不一致；Mac 上确认 `tlsEnabled=true`，版本 1.27.0 |
 | 鼠标能过去但不能点击 / 不能打字 | 辅助功能、输入监控权限没开，或开了之后没重启 Deskflow（第 2.4 节） |
-| 一切正常但偶尔卡顿 | 两台机器尽量走 5 GHz Wi‑Fi 或有线 |
+| 连上了但不流畅 | 见第 3.5 节（App Nap、日志级别、Wi‑Fi、回报率） |
 
 Mac 端日志：Deskflow 界面下方的日志面板。也可以在 Preferences 里打开“记录日志到文件”，把文件内容反馈给用户。
 
