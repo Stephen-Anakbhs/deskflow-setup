@@ -151,7 +151,10 @@ open -a Deskflow
 
 ## 3. 推荐的 Mac 端调整（可选）
 
-- **修饰键互换**：Windows 键盘的 Ctrl 默认对应 Mac 的 Control。想在 Mac 上也按 Ctrl+C 复制，需要在 **Windows 主机**的「配置服务器」里双击 `MACBOOK`，把修饰键映射改为 `Ctrl → Meta(Command)`、`Meta(Win) → Ctrl`。这一项在主机端设置。
+- **修饰键互换（主机端已完成，2026-11-10）**：Windows 主机已为 `MACBOOK` 设置 `Ctrl → Super(Command)`、`Win(Super) → Ctrl`。用 Windows 键盘（NuPhy Air75 V3，Windows 模式）在 Mac 上按 **Ctrl+C / Ctrl+V / Ctrl+A / Ctrl+Z / Ctrl+S** 等，等同于 Mac 上的 Command 组合键。**Mac 端不要再做任何 Control/Command 互换**（不要在「系统设置 → 键盘 → 修饰键」里对调，也不要用 Karabiner 对调），否则会换回去。
+  - 真正需要 Mac 的 Control 时，按 **Win 键**，例如终端里中断程序用 `Win+C`。
+  - Alt 对应 Option，保持不变。
+  - 验证：在 Mac 的「备忘录」里输入文字，然后按 Ctrl+A 全选、Ctrl+C 复制、Ctrl+V 粘贴、Ctrl+Z 撤销。
 - **开机自动连接**：「系统设置 → 通用 → 登录项」里添加 Deskflow。注意：Mac 锁屏/刚开机时 Deskflow 还没运行，需要用 Mac 自带的键盘或触控板输一次密码。
 - **滚轮方向**：觉得 Mac 上滚轮方向反了，可在 `[client]` 里加 `invertYScroll=true`，或在 Mac 的鼠标设置里切换“自然滚动”。
 
@@ -183,7 +186,7 @@ open -a Deskflow
 
 4. **屏幕缩放**：Mac 外接 21:9 显示器时，如果在「显示器」设置里选了非默认的缩放分辨率，指针移动的计算量会变大。可以试试切回“默认”分辨率，对比一下流畅度。
 
-5. **鼠标回报率（在 Windows 那边处理，需要用户操作）**：如果鼠标是 4000/8000 Hz 的高回报率游戏鼠标，Deskflow 每秒要转发几千个移动事件，Mac 端会跟不上。请用户在鼠标驱动（如 Logi Options+ / G HUB）里把回报率降到 **1000 Hz 或 500 Hz** 再试。
+5. **鼠标回报率**：已排除——主机用的是蓝牙连接的罗技鼠标，回报率由蓝牙固定在约 90–130 Hz，不存在事件过多的问题，不需要调整。（下面这段只适用于以后换成有线 / 2.4G 高回报率鼠标的情况）：如果鼠标是 4000/8000 Hz 的高回报率游戏鼠标，Deskflow 每秒要转发几千个移动事件，Mac 端会跟不上。请用户在鼠标驱动（如 Logi Options+ / G HUB）里把回报率降到 **1000 Hz 或 500 Hz** 再试。
 
 每处理一项，都请用户实际移动鼠标对比一下，记录是哪一项起了作用。
 
