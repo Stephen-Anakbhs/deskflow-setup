@@ -192,6 +192,56 @@ open -a Deskflow
 
 ---
 
+## 3.6 罗技鼠标侧键在 Mac 上的快捷键（截图 / 贴图等）
+
+**原因**：鼠标（Logitech **MX Master 4**）直连 Mac 时，按键改成快捷键是 Mac 上的 Logi Options+ 做的。现在鼠标连在 Windows 上，Mac 的 Options+ 看不到这只鼠标，Deskflow 只把**普通鼠标按键**转发给 Mac，所以那些快捷键失效了。
+
+**主机端现状（Windows Options+，默认配置）**：
+- 后退键 = 鼠标按键 4，前进键 = 鼠标按键 5，中键 = 按键 3。这三个键 Deskflow 会转发到 Mac。
+- 手势键（拇指位）、顶部模式切换键、触感/动作环按键，都在 Windows 本机处理，**不会**以原样传到 Mac。
+
+**做法**：Windows 端不改，在 Mac 上用免费的 **Hammerspoon** 把 Deskflow 转发过来的按键 4/5 重新映射成原来的快捷键。
+
+步骤（给 Mac 上的 AI 助手）：
+
+1. **先查清原来的映射**：读取 Mac 上 Options+ 的配置，找出 MX Master 4 的哪个键对应哪个快捷键（例如“后退键 → ⌘⇧4 截图”）。配置文件一般在 `~/Library/Application Support/LogiOptionsPlus/settings.db`（SQLite，内容是 JSON，搜索 `mx-master-4` 的 `assignments`，或 `slotId` 以 `_c83`（后退）、`_c86`（前进）、`_c82`（中键）结尾的项）。读之前先复制一份，不要修改原文件。读不出来就直接问用户。把结果列给用户确认。
+   - 如果原来用的是**后退/前进/中键**：继续第 2 步。
+   - 如果用的是手势键、顶部按键或动作环：这些键不经过 Deskflow，请告诉用户“需要在 Windows 端改 Options+”，并写明是哪个键、对应什么快捷键，由 Windows 那边处理。
+2. 安装 Hammerspoon：`brew install --cask hammerspoon`，打开它，在「系统设置 → 隐私与安全性 → 辅助功能」里打开 Hammerspoon 的开关（需要用户点击）。
+3. **先确认按键编号**：在 Hammerspoon 控制台临时运行下面这段，然后让用户在 Mac 屏幕上按各个侧键，记录打印出来的编号（通常后退 = 3，前进 = 4，中键 = 2）：
+
+   ```lua
+   t = hs.eventtap.new({hs.eventtap.event.types.otherMouseDown}, function(e)
+     print("button", e:getProperty(hs.eventtap.event.properties.mouseEventButtonNumber)); return false end):start()
+   ```
+
+4. 把下面的代码写进 `~/.hammerspoon/init.lua`（已有内容就追加在后面），然后按第 1 步查到的结果填写 `map`。示例假设后退 = 截图（⌘⇧4），前进 = 贴图（F3），实际以第 1 步为准：
+
+   ```lua
+   -- Deskflow: Windows 主机罗技鼠标侧键 -> Mac 快捷键
+   local map = {
+     [3] = {mods = {"cmd", "shift"}, key = "4"},  -- 后退键
+     [4] = {mods = {},               key = "f3"}, -- 前进键
+   }
+   deskflowMouseTap = hs.eventtap.new(
+     {hs.eventtap.event.types.otherMouseDown, hs.eventtap.event.types.otherMouseUp},
+     function(e)
+       local m = map[e:getProperty(hs.eventtap.event.properties.mouseEventButtonNumber)]
+       if not m then return false end
+       if e:getType() == hs.eventtap.event.types.otherMouseDown then
+         hs.eventtap.keyStroke(m.mods, m.key, 0)
+       end
+       return true  -- 吞掉原来的后退/前进
+     end):start()
+   ```
+
+5. Hammerspoon 菜单 → Reload Config。在 Hammerspoon 偏好设置里勾选 “Launch Hammerspoon at login”。
+6. **验证**：让用户把鼠标移到 Mac 上，分别按这几个侧键，确认截图、贴图等动作正常触发。
+
+说明：用 Windows 键盘按的快捷键也会转发到 Mac，并且 Ctrl 已经映射成 Command（见第 3 节）。不过 Hammerspoon 发出的 `cmd` 是 Mac 本地直接产生的，不经过这层映射，所以 `map` 里照写 Mac 原本的快捷键即可。
+
+---
+
 ## 4. 排错
 
 | 现象 | 处理 |
